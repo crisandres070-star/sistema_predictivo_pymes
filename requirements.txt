@@ -4,9 +4,9 @@ pydantic
 python-multipart
 SQLAlchemy
 psycopg2-binary
-python-jose[cryptography]
 passlib[bcrypt]
 pandas
 openpyxl
 python-dotenv
 email-validator
+PyJWT
