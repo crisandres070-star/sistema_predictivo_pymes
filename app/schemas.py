@@ -1,45 +1,57 @@
 from pydantic import BaseModel
-from datetime import datetime
+from typing import Optional, List
 
-# ======================================
-# USUARIOS
-# ======================================
-class UserCreate(BaseModel):
+# ======================
+# USUARIO
+# ======================
+
+class UserBase(BaseModel):
     email: str
+
+class UserCreate(UserBase):
     password: str
-    
-class UserOut(BaseModel):
+
+class UserOut(UserBase):
     id: int
-    email: str
-    
+
     class Config:
         orm_mode = True
 
-
-# ======================================
+# ======================
 # INVENTARIO
-# ======================================
-class InventoryItemOut(BaseModel):
+# ======================
+
+class InventoryItemBase(BaseModel):
+    name: str
+    quantity: int
+    price: float
+
+class InventoryItemCreate(InventoryItemBase):
+    pass
+
+class InventoryItemOut(InventoryItemBase):
     id: int
-    product_name: str
-    current_stock: float
-    avg_daily_sales: float
-    created_at: datetime
 
     class Config:
         orm_mode = True
 
-class InventoryUploadResponse(BaseModel):
+# ======================
+# ALERTAS
+# ======================
+
+class AlertItem(BaseModel):
+    name: str
+    status: str
     message: str
 
+# ======================
+# ANÁLISIS
+# ======================
 
-# ======================================
-# TOKEN
-# ======================================
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+class InventoryAnalysisItem(BaseModel):
+    name: str
+    stock_status: str
+    recommendation: str
 
-class TokenData(BaseModel):
-    email: str | None = None
-    
+class InventoryAnalysisList(BaseModel):
+    analysis: List[InventoryAnalysisItem]
