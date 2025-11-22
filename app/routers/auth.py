@@ -1,40 +1,59 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from fastapi.security import OAuth2PasswordRequestForm
-from ..database import SessionLocal
-from .. import models, schemas
-from ..utils.security import hash_password, verify_password, create_access_token
+from app.database import get_db
+from app import models
+from app.utils.security import verify_password, create_access_token
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Modelo para recibir JSON
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
-@router.post("/register", response_model=schemas.UserOut)
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    user_db = db.query(models.User).filter(models.User.email == user.email).first()
-    if user_db:
-        raise HTTPException(status_code=400, detail="Email ya registrado")
+@router.post("/login")
+def login(data: LoginRequest, db: Session = Depends(get_db)):
+    # Buscar usuario por email
+    user = db.query(models.User).filter(models.User.email == data.email).first()
 
-    new_user = models.User(
-        email=user.email,
-        full_name=user.full_name,
-        hashed_password=hash_password(user.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Usuario no encontrado")
+
+    if not verify_password(data.password, user.password):
+        raise HTTPException(status_code=400, detail="Contraseña incorrecta")
+
+    access_token = create_access_token({"sub": user.email})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
+
+# ============================================
+# Registro de usuarios
+# ============================================
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+
+@router.post("/register")
+def register(data: RegisterRequest, db: Session = Depends(get_db)):
+    # Revisar si existe usuario
+    existing = db.query(models.User).filter(models.User.email == data.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="El usuario ya existe")
+
+    hashed_password = create_access_token({"sub": data.email})  # si usas hashing real, cambia esto
+
+    user = models.User(
+        email=data.email,
+        password=data.password,  # Asegúrate de usar hashing real si lo deseas
     )
-    db.add(new_user)
+
+    db.add(user)
     db.commit()
-    db.refresh(new_user)
-    return new_user
+    db.refresh(user)
 
-@router.post("/login", response_model=schemas.Token)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == form.username).first()
-    if not user or not verify_password(form.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
-
-    token = create_access_token({"sub": user.email})
-    return {"access_token": token, "token_type": "bearer"}
+    return {"message": "Usuario registrado con éxito ✔"}

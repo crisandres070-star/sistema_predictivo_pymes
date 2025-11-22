@@ -1,0 +1,22 @@
+<div id="tablaInventario"></div>
+
+<script src="../main.js"></script>
+<script>
+    checkAuth();
+
+    cargarInventario().then(data => {
+        let html = "<table><tr><th>Producto</th><th>Stock</th><th>Ventas Diarias</th></tr>";
+
+        data.forEach(item => {
+            html += `<tr>
+        <td>${item.product_name}</td>
+        <td>${item.current_stock}</td>
+        <td>${item.avg_daily_sales}</td>
+      </tr>`;
+        });
+
+        html += "</table>";
+
+        document.getElementById("tablaInventario").innerHTML = html;
+    });
+</script>
