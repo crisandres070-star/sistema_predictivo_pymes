@@ -1,11 +1,10 @@
 services:
   - type: web
-    name: sistema-predictivo-pymes
+    name: sistema_predictivo_pymes
     env: python
-    branch: main
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port 10000"
     plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
