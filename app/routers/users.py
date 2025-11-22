@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
 from ..database import SessionLocal
 from .. import models, schemas
-from ..utils.security import decode_access_token
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

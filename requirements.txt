@@ -10,4 +10,3 @@ pandas
 openpyxl
 python-dotenv
 email-validator
-PyJWT

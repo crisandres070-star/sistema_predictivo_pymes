@@ -1,20 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+
 from app.database import get_db
 from app import models
-from app.utils.security import verify_password, create_access_token
-from pydantic import BaseModel
+from app.utils.security import verify_password, create_access_token, hash_password
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-# Modelo para recibir JSON
 class LoginRequest(BaseModel):
     email: str
     password: str
 
 @router.post("/login")
 def login(data: LoginRequest, db: Session = Depends(get_db)):
-    # Buscar usuario por email
     user = db.query(models.User).filter(models.User.email == data.email).first()
 
     if not user:
@@ -25,35 +24,27 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 
     access_token = create_access_token({"sub": user.email})
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    return {"access_token": access_token, "token_type": "bearer"}
 
+# ============================
+# Registro de usuarios (opcional)
+# ============================
 
-# ============================================
-# Registro de usuarios
-# ============================================
 class RegisterRequest(BaseModel):
     email: str
     password: str
 
 @router.post("/register")
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
-    # Revisar si existe usuario
-    existing = db.query(models.User).filter(models.User.email == data.email).first()
-    if existing:
+    user_exists = db.query(models.User).filter(models.User.email == data.email).first()
+
+    if user_exists:
         raise HTTPException(status_code=400, detail="El usuario ya existe")
 
-    hashed_password = create_access_token({"sub": data.email})  # si usas hashing real, cambia esto
+    hashed = hash_password(data.password)
 
-    user = models.User(
-        email=data.email,
-        password=data.password,  # Asegúrate de usar hashing real si lo deseas
-    )
-
-    db.add(user)
+    new_user = models.User(email=data.email, password=hashed)
+    db.add(new_user)
     db.commit()
-    db.refresh(user)
 
-    return {"message": "Usuario registrado con éxito ✔"}
+    return {"msg": "Usuario registrado correctamente"}
