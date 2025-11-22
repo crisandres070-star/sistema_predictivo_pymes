@@ -1,15 +1,12 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from datetime import datetime
 
-# ======================
-# USUARIO
-# ======================
+# ============================
+#   USUARIOS
+# ============================
 
 class UserBase(BaseModel):
     email: str
-
-class UserCreate(UserBase):
-    password: str
 
 class UserOut(UserBase):
     id: int
@@ -17,41 +14,56 @@ class UserOut(UserBase):
     class Config:
         orm_mode = True
 
-# ======================
-# INVENTARIO
-# ======================
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+# ============================
+#   INVENTARIO (BASE)
+# ============================
 
 class InventoryItemBase(BaseModel):
-    name: str
-    quantity: int
-    price: float
+    product_name: str
+    current_stock: int
+    avg_daily_sales: float
 
-class InventoryItemCreate(InventoryItemBase):
-    pass
+
+# ============================
+#   INVENTARIO - RESPUESTA LISTADO
+# ============================
 
 class InventoryItemOut(InventoryItemBase):
     id: int
+    user_id: int
 
     class Config:
         orm_mode = True
 
-# ======================
-# ALERTAS
-# ======================
 
-class AlertItem(BaseModel):
-    name: str
-    status: str
+# ============================
+#   INVENTARIO - RESPUESTA DE UPLOAD
+# ============================
+
+class InventoryUploadResponse(BaseModel):
     message: str
 
-# ======================
-# ANÁLISIS
-# ======================
+
+# ============================
+#   INVENTARIO - ANÁLISIS PREDICTIVO
+# ============================
 
 class InventoryAnalysisItem(BaseModel):
-    name: str
-    stock_status: str
-    recommendation: str
+    product_name: str
+    current_stock: int
+    avg_daily_sales: float
+    days_remaining: float
+    estimated_out_date: datetime
+    risk_level: str
 
-class InventoryAnalysisList(BaseModel):
-    analysis: List[InventoryAnalysisItem]
+    class Config:
+        orm_mode = True
